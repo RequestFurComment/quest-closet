@@ -1,0 +1,24 @@
+# LARP Outfitter (Quête & Équipement / Quest & Gear) - PRD
+
+## Original problem
+App where LARP players buy gear for events. Track LARP events within 3-4h of Montreal. Categories: camping, costumes, makeup, weapons. Selfie upload + AI preview of the player in gear. Two flows: (A) pick items → preview, (B) AI character interview → recommendations.
+
+## Decisions (approved plan)
+Bilingual FR (default)/EN; Google sign-in (Emergent Clerk); Quebec residents only (checkbox + QC postal code at checkout); events in Quebec only; in-app shop (CAD); Stripe test mode with GST+QST (Stripe Tax calc_only); Emergent universal key for AI.
+
+## Architecture
+- Backend FastAPI: server.py (routes), ai.py (Claude Sonnet 5.5 web-search events, interview stream, recommendations; Gemini 3.1 flash image preview), catalog.py (24 bilingual products), storage.py (Emergent object storage), clerk_auth.py, setup_stripe.py (creates Stripe products/prices + QC tax registration).
+- Frontend React: lib/i18n.js, lib/appState.js, pages (Landing, Home, Profile, Events, Shop, BuildLook, Interview, LookDetail, Looks, Commerce).
+- Shared AI key allows 1 concurrent LLM request → global lock + retry in ai.py.
+
+## Implemented (2026-11-20)
+- FR/EN toggle, Google sign-in, profile + Quebec gate + selfie upload
+- AI event search (10 real Quebec events found), refresh, source/last-checked
+- Shop, cart drawer, Flow A builder w/ budget meter, Flow B streaming interview + recommendations, look page (preview polling, swap/remove/add items, add all to cart), looks gallery
+- Stripe checkout (QC address only, GST+QST verified 14.975%), payment success polling, order history
+- Verified via curl + screenshots; full testing-agent run NOT yet done
+
+## Backlog
+- P0: full end-to-end test run (testing agent); verify preview UI flow + Stripe redirect in browser
+- P1: admin (products, approve events, orders); Flow A vs B usage analytics; hide past events
+- P2: shipping/pickup, rentals, group sharing, expand beyond Quebec
