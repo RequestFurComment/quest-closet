@@ -8,6 +8,7 @@ from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -145,6 +146,9 @@ async def download(path: str, user: dict = Uid):
 
 
 # ---------- Events ----------
+AGE_SUFFIX = re.compile(r"[,;\s]*\(?(?:ages?\s*|âges?\s*)?\d{1,2}\s*(?:\+|ans\s*et\s*plus|[–-]\s*\d{1,2})\s*(?:ans)?\)?\s*$", re.I)
+
+
 def _event_key(name):
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
@@ -155,26 +159,61 @@ async def refresh_events():
     for e in found:
         key = _event_key(e["name"])
         doc = {k: e.get(k, "") for k in ("name", "start_date", "end_date", "dates_text_en", "dates_text_fr", "location",
-                                          "drive_time", "genre_en", "genre_fr", "description_en", "description_fr", "url")}
+                                          "drive_time", "genre_en", "genre_fr", "description_en", "description_fr", "url",
+                                          "recurrence_en", "recurrence_fr", "age_range_en", "age_range_fr")}
         doc["distance_km"] = int(e.get("distance_km") or 0)
+        for g in ("genre_en", "genre_fr"):
+            doc[g] = AGE_SUFFIX.sub("", doc[g]).strip()
         doc.update({"key": key, "source_url": e.get("url", ""), "last_checked": checked})
         await db.events.update_one({"key": key}, {"$set": doc, "$setOnInsert": {"id": str(uuid.uuid4())}}, upsert=True)
+    if found:
+        today = datetime.now(timezone.utc).date().isoformat()
+        fresh = await db.events.find({"last_checked": checked}, {"_id": 0, "url": 1}).to_list(100)
+        hosts = {urlparse(e["url"]).netloc.removeprefix("www.") for e in fresh if e.get("url")}
+        async for old in db.events.find({"last_checked": {"$ne": checked}}, {"_id": 0, "id": 1, "url": 1, "start_date": 1, "end_date": 1}):
+            past = max(old.get("start_date") or "", old.get("end_date") or "") < today
+            dup = urlparse(old.get("url") or "").netloc.removeprefix("www.") in hosts
+            if past or dup:
+                await db.events.delete_one({"id": old["id"]})
     return len(found)
+
+
+refresh_state = {"running": False, "error": False}
+
+
+async def _refresh_job():
+    try:
+        await refresh_events()
+        refresh_state["error"] = False
+    except Exception as exc:
+        logger.error("event refresh failed: %s", exc)
+        refresh_state["error"] = True
+    finally:
+        refresh_state["running"] = False
 
 
 @api.get("/events")
 async def list_events():
-    return await db.events.find({}, {"_id": 0}).sort("distance_km", ASCENDING).to_list(100)
+    today = datetime.now(timezone.utc).date().isoformat()
+    upcoming = {"$or": [{"start_date": {"$gte": today}}, {"end_date": {"$gte": today}}]}
+    events = await db.events.find(upcoming, {"_id": 0}).sort("start_date", ASCENDING).to_list(100)
+    for e in events:
+        for g in ("genre_en", "genre_fr"):
+            e[g] = AGE_SUFFIX.sub("", e.get(g) or "").strip()
+    return events
 
 
 @api.post("/events/refresh")
 async def refresh(user: dict = Uid):
-    try:
-        n = await refresh_events()
-    except Exception as exc:
-        logger.error("event refresh failed: %s", exc)
-        raise HTTPException(502, "Event search failed, please try again")
-    return {"found": n, "events": await list_events()}
+    if not refresh_state["running"]:
+        refresh_state["running"] = True
+        asyncio.create_task(_refresh_job())
+    return refresh_state
+
+
+@api.get("/events/refresh")
+async def refresh_status():
+    return refresh_state
 
 
 async def get_event(event_id):
@@ -513,8 +552,9 @@ app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=os.envi
 
 async def _seed_events():
     with suppress(Exception):
-        if await db.events.count_documents({}) == 0:
-            await refresh_events()
+        if await db.events.count_documents({}) == 0 and not refresh_state["running"]:
+            refresh_state["running"] = True
+            await _refresh_job()
 
 
 @app.on_event("startup")
