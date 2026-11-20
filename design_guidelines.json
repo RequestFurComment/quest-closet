@@ -1,0 +1,132 @@
+{
+  "project_name": "Valdor Outfitter - LARP Gear & Quebec Adventurer Hub",
+  "archetype": "Adventurer's Outfitter (Atmospheric Dark, Parchment, Leather & Ember)",
+  "color_palette": {
+    "background_deep": "#0C0A09",
+    "surface_leather": "#1C1917",
+    "surface_parchment_tint": "#292524",
+    "border_leather": "#44403C",
+    "border_ember": "#D97706",
+    "accent_ember": "#F59E0B",
+    "accent_ember_glow": "#B45309",
+    "text_parchment": "#F5F5F4",
+    "text_muted_leather": "#A8A29E",
+    "success_nature": "#10B981",
+    "badge_quebec_blue": "#1E40AF"
+  },
+  "typography": {
+    "font_family_display": "'Cinzel', 'Playfair Display', serif",
+    "font_family_body": "'Plus Jakarta Sans', 'Inter', sans-serif",
+    "font_family_mono": "'JetBrains Mono', monospace",
+    "headings": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight font-serif text-amber-50",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-normal font-serif text-amber-100",
+      "h3": "text-xl sm:text-2xl font-medium font-serif text-stone-200",
+      "body": "text-sm sm:text-base leading-relaxed text-stone-300 font-sans",
+      "eyebrow": "text-xs font-semibold uppercase tracking-[0.2em] text-amber-500/90"
+    }
+  },
+  "bilingual_support": {
+    "mode": "Client-side toggle (FR / EN)",
+    "rule": "Layouts must allow 25-30% expansion for French translations (e.g. 'Build Your Look' -> 'Forger votre costume', 'Character Interview' -> 'Entretien avec l\\'Oracle')."
+  },
+  "image_urls": {
+    "hero_warrior": {
+      "url": "https://images.pexels.com/photos/35248220/pexels-photo-35248220.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Medieval warrior in armor with sword, ideal for hero banner and preview header."
+    },
+    "hero_ranger": {
+      "url": "https://images.unsplash.com/photo-1686747517763-f9d694bda04d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwzfHxtZWRpZXZhbCUyMHdhcnJpb3IlMjBjb3N0dW1lJTIwbGFycHxlbnwwfHx8fDE3OTUyMDU0OTF8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Knight on woodland trail, perfect for build-your-look background."
+    },
+    "hero_barbarian": {
+      "url": "https://images.pexels.com/photos/40452766/pexels-photo-40452766.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Costumed warrior in fur garb with double axes, great for Character Interview flow card."
+    },
+    "camping_lantern": {
+      "url": "https://images.unsplash.com/photo-1766773725488-1a56bb11f4b1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxjYW1waW5nJTIwZ2VhciUyMHRlbnQlMjBmb3Jlc3QlMjBsYW50ZXJufGVufDB8fHx8MTc5NTIwNTQ5MXww&ixlib=rb-4.1.0&q=85",
+      "description": "Hand holding lantern in deep forest, represents Camping Gear category."
+    },
+    "camping_camp": {
+      "url": "https://images.pexels.com/photos/12336791/pexels-photo-12336791.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Nighttime campsite tent with warm lantern glow."
+    },
+    "weapons_sword_scabbard": {
+      "url": "https://images.unsplash.com/photo-1774812855895-7f05397e6df2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHw0fHxmYW50YXN5JTIwc3dvcmQlMjBkYWdnZXIlMjBsZWF0aGVyJTIwYXJtb3J8ZW58MHx8fHwxNzk1MjA1NDkxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Ornate medieval sword hilt and leather scabbard, represents Weapons category."
+    },
+    "weapons_blade": {
+      "url": "https://images.unsplash.com/photo-1590505029111-371381f65018?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHxmYW50YXN5JTIwc3dvcmQlMjBkYWdnZXIlMjBsZWF0aGVyJTIwYXJtb3J8ZW58MHx8fHwxNzk1MjA1NDkxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Engraved fantasy blade on rustic wood."
+    },
+    "leather_armor_gear": {
+      "url": "https://images.unsplash.com/photo-1600081523138-0bae23488dea?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwxfHxtZWRpZXZhbCUyMHdhcnJpb3IlMjBjb3N0dW1lJTIwbGFycHxlbnwwfHx8fDE3OTUyMDU0OTF8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Riveted leather and chainmail harness texture for costumes category."
+    }
+  },
+  "layout_and_navigation": {
+    "header": {
+      "style": "Sticky at z-50, backdrop-blur-xl bg-stone-950/85 border-b border-stone-800/80 px-4 py-3 sm:px-6",
+      "elements": [
+        "Brand Logo: 'Valdor Outfitter' with ember forge crest",
+        "Navigation links: Events (Montreal 3-4h), Shop (4 Cats), Build Look (Flow A), Character Oracle (Flow B)",
+        "Bilingual Switcher: FR / EN toggle button with subtle gold border",
+        "Cart Quick-Drawer Trigger with live count & price (CAD)",
+        "User Profile / Clerk Auth Badge"
+      ]
+    },
+    "two_flow_cards": {
+      "strategy": "Two prominent side-by-side cards on desktop, stacked on mobile with equal prominence (50/50 split).",
+      "card_a": {
+        "title_en": "Flow A: Forge Your Own Look",
+        "title_fr": "Voie A : Composez votre attirail",
+        "badge": "Interactive Studio",
+        "description": "Handpick individual armor, weapons, tent gear, and FX makeup with live CAD budget meter and selfie virtual try-on."
+      },
+      "card_b": {
+        "title_en": "Flow B: The Character Oracle",
+        "title_fr": "Voie B : L'Oracle de Personnage",
+        "badge": "AI Roleplay Interview",
+        "description": "Answer 4 questions about your LARP persona (clan, combat archetype, camping comfort, budget) to generate a full lore-accurate kit."
+      }
+    },
+    "events_finder": {
+      "region": "Montreal & 3-4h Radius (Estrie, Laurentides, Lanaudière, Montérégie, Mauricie, Ottawa/Outaouais)",
+      "features": [
+        "AI Web Search refresh trigger with last-checked timestamp",
+        "Event metadata: Distance from Montreal (km & drive time), Rulebook/LARP System (Bicolline, Terres d'Arragon, etc.)",
+        "Direct link to official LARP organizer site",
+        "Filter by date, distance, and gear requirements"
+      ]
+    },
+    "onboarding_modal": {
+      "fields": [
+        "Quebec / Greater Montreal Residency Check (Checkbox)",
+        "City / Region selector (Montreal, Laval, Longueuil, Sherbrooke, Trois-Rivières, Gatineau, etc.)",
+        "Character Identity: Gender, Height (cm), Weight (kg) for gear sizing",
+        "Budget ceiling (CAD Slider $100 - $2,500)",
+        "Selfie photo upload for AI Virtual Fitting preview"
+      ]
+    }
+  },
+  "data_test_ids": {
+    "lang_toggle": "language-toggle-btn",
+    "cart_drawer_trigger": "cart-drawer-trigger",
+    "onboarding_modal": "onboarding-dialog",
+    "onboarding_submit": "onboarding-save-btn",
+    "flow_a_cta": "flow-a-start-btn",
+    "flow_b_cta": "flow-b-start-btn",
+    "events_refresh": "events-ai-refresh-btn",
+    "selfie_upload_input": "selfie-file-input",
+    "generate_preview_btn": "generate-ai-preview-btn",
+    "checkout_btn": "stripe-checkout-btn"
+  },
+  "instructions_to_main_agent": [
+    "Use JavaScript (.js/.jsx) with Tailwind CSS and Radix/shadcn components. Do not generate TypeScript (.tsx) files.",
+    "Implement full bilingual toggling with an easy-to-read dictionary (fr/en) so every section supports Quebec francophone users and English participants.",
+    "Style surfaces with warm dark leathers (stone-900 to stone-950), ember borders (amber-500/30), parchment text (stone-200), and gold call-to-actions.",
+    "Never leave headers transparent. Keep sticky navigation legible over hero banners using backdrop-blur-xl bg-stone-950/85.",
+    "Add data-testid attributes to all major buttons, links, inputs, and interactive steps for robust automated verification.",
+    "Always provide realistic Montreal-radius LARP events (Duché de Bicolline in Saint-Mathieu-du-Parc, Terres de Bélénos, Terra Incognita, etc.) with verified-looking metadata and source links."
+  ]
+}
