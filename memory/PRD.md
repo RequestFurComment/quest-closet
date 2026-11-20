@@ -18,6 +18,12 @@ Bilingual FR (default)/EN; Google sign-in (Emergent Clerk); Quebec residents onl
 - Stripe checkout (QC address only, GST+QST verified 14.975%), payment success polling, order history
 - Verified via curl + screenshots; full testing-agent run NOT yet done
 
+## Rule changes (2026-11-20, for branch e.g. `guest-checkout-rules`)
+- No login needed until checkout: anonymous guest id (localStorage → X-Guest-Id header) owns profile, selfie, looks, interview, cart
+- Signing in (at checkout) merges guest data into the Google account (/api/guest/merge)
+- Quebec residency checkbox and gate removed; Montreal is the default city/focus. Shipping still Quebec postal codes only
+- Orders and payment status require sign-in
+
 ## Backlog
 - P0: full end-to-end test run (testing agent); verify preview UI flow + Stripe redirect in browser
 - P1: admin (products, approve events, orders); Flow A vs B usage analytics; hide past events

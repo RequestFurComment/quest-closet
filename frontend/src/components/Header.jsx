@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { Show, UserButton } from "@clerk/react";
+import { Show, UserButton, useAuth } from "@clerk/react";
 import { ShoppingBag, Flame } from "lucide-react";
 import { useLang, money } from "@/lib/i18n";
 import { useApp } from "@/lib/appState";
@@ -23,6 +23,8 @@ const NAV = [["/events", "nav_events"], ["/shop", "nav_shop"], ["/looks", "nav_l
 export const Header = () => {
   const { t, lang } = useLang();
   const { cart, byId, setCartOpen } = useApp();
+  const { isSignedIn } = useAuth();
+  const nav = NAV.filter(([to]) => isSignedIn || to !== "/orders");
   const count = cart.reduce((s, i) => s + i.qty, 0);
   const total = cart.reduce((s, i) => s + (byId[i.product_id]?.price || 0) * i.qty, 0);
   return (
@@ -34,39 +36,36 @@ export const Header = () => {
           </span>
           <span className="hidden font-display text-base font-bold tracking-wide text-amber-50 sm:block">{t("brand")}</span>
         </Link>
-        <Show when="signed-in">
-          <nav className="ml-4 hidden items-center gap-1 lg:flex">
-            {NAV.map(([to, k]) => (
+        <nav className="ml-4 hidden items-center gap-1 lg:flex">
+            {nav.map(([to, k]) => (
               <NavLink key={to} to={to} data-testid={`nav-${k}`}
                 className={({ isActive }) => `rounded-md px-3 py-2 text-sm transition-colors ${isActive ? "text-amber-400" : "text-stone-300 hover:text-amber-200"}`}>
                 {t(k)}
               </NavLink>
             ))}
           </nav>
-        </Show>
         <div className="ml-auto flex items-center gap-3">
           <LangToggle />
-          <Show when="signed-in">
             <button onClick={() => setCartOpen(true)} data-testid="cart-drawer-trigger"
               className="flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-3 py-1.5 text-sm text-stone-100 transition-colors hover:border-amber-500/60">
               <ShoppingBag size={16} className="text-amber-400" />
               <span data-testid="cart-count">{count}</span>
               <span className="hidden text-stone-400 sm:inline" data-testid="cart-total-header">{money(total, lang)}</span>
             </button>
-            <UserButton />
+          <Show when="signed-in"><UserButton /></Show>
+          <Show when="signed-out">
+            <Link to="/sign-in" data-testid="header-signin-link" className="text-sm text-stone-300 hover:text-amber-300">{t("signin")}</Link>
           </Show>
         </div>
       </div>
-      <Show when="signed-in">
         <nav className="flex gap-1 overflow-x-auto border-t border-stone-800/60 px-3 py-1.5 lg:hidden">
-          {NAV.map(([to, k]) => (
+          {nav.map(([to, k]) => (
             <NavLink key={to} to={to} data-testid={`mnav-${k}`}
               className={({ isActive }) => `whitespace-nowrap rounded-md px-3 py-1.5 text-xs ${isActive ? "bg-stone-800 text-amber-400" : "text-stone-300"}`}>
               {t(k)}
             </NavLink>
           ))}
         </nav>
-      </Show>
     </header>
   );
 };

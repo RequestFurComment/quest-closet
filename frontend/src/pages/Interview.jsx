@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/react";
 import { Loader2, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EventPicker } from "@/components/EventPicker";
 import { CategoryChips } from "@/pages/BuildLook";
 import { useLang } from "@/lib/i18n";
-import { useApp, API } from "@/lib/appState";
+import { useApp, useAuthHeaders, API } from "@/lib/appState";
 
 const Bubble = ({ m, i }) => (
   <div className={`flex ${m.role === "player" ? "justify-end" : "justify-start"}`} data-testid={`chat-msg-${i}`}>
@@ -20,7 +19,7 @@ const Bubble = ({ m, i }) => (
 export default function Interview() {
   const { t, lang } = useLang();
   const { api, catalog, toast } = useApp();
-  const { getToken } = useAuth();
+  const authHeaders = useAuthHeaders();
   const navigate = useNavigate();
   const [eventId, setEventId] = useState(null);
   const [iv, setIv] = useState(null);
@@ -38,7 +37,7 @@ export default function Interview() {
     setMsgs((m) => [...m, ...(userText ? [{ role: "player", content: userText }] : []), { role: "oracle", content: "" }]);
     try {
       const res = await fetch(`${API}/interviews/${id}/message`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
+        method: "POST", headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ text: userText, lang }),
       });
       const reader = res.body.getReader();
