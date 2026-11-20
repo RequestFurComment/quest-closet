@@ -24,9 +24,9 @@ from starlette.concurrency import run_in_threadpool  # noqa: E402
 from starlette.middleware.cors import CORSMiddleware  # noqa: E402
 
 try:
-    from backend.clerk_auth import clerk_router, require_user
+    from backend.clerk_auth import clerk_router, require_user, verify_session_token
 except ModuleNotFoundError:
-    from clerk_auth import clerk_router, require_user
+    from clerk_auth import clerk_router, require_user, verify_session_token
 import ai  # noqa: E402
 import storage  # noqa: E402
 from catalog import CATEGORIES, PRODUCT_MAP, PRODUCTS  # noqa: E402
@@ -67,7 +67,22 @@ def now_iso():
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-Uid = Depends(require_user)
+GUEST_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+
+
+def current_user(request: Request) -> dict:
+    """Signed-in Clerk user if a valid token is sent, else the anonymous guest from X-Guest-Id."""
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("bearer ") and len(auth) > 20:
+        return {"user_id": verify_session_token(auth[7:])["sub"], "guest": False}
+    gid = request.headers.get("x-guest-id", "").lower()
+    if not GUEST_RE.match(gid):
+        raise HTTPException(401, "Missing guest id")
+    return {"user_id": f"guest_{gid}", "guest": True}
+
+
+Uid = Depends(current_user)
+Signed = Depends(require_user)
 
 
 # ---------- Catalog ----------
@@ -79,7 +94,6 @@ async def catalog():
 # ---------- Profile ----------
 class ProfileIn(BaseModel):
     lang: str = "fr"
-    quebec_resident: bool
     city: str = ""
     gender: str = ""
     height_cm: Optional[int] = Field(None, ge=80, le=250)
@@ -123,7 +137,8 @@ async def upload_selfie(file: UploadFile = File(...), user: dict = Uid):
 
 @api.get("/files/{path:path}")
 async def download(path: str, user: dict = Uid):
-    if f"/{user['user_id']}/" not in f"/{path}":
+    owners = [user["user_id"], *(await get_profile_doc(user["user_id"])).get("merged_guests", [])]
+    if not any(f"/{o}/" in f"/{path}" for o in owners):
         raise HTTPException(404, "Not found")
     data, ctype = await run_in_threadpool(storage.get_object, path)
     return Response(content=data, media_type=ctype, headers={"Cache-Control": "private, max-age=3600"})
@@ -370,8 +385,32 @@ class CheckoutIn(BaseModel):
     lang: str = "fr"
 
 
+@api.post("/guest/merge")
+async def merge_guest(request: Request, user: dict = Signed):
+    gid = request.headers.get("x-guest-id", "").lower()
+    if not GUEST_RE.match(gid):
+        return {"merged": False}
+    guest, uid = f"guest_{gid}", user["user_id"]
+    await db.looks.update_many({"user_id": guest}, {"$set": {"user_id": uid}})
+    await db.interviews.update_many({"user_id": guest}, {"$set": {"user_id": uid}})
+    gcart = await db.carts.find_one({"user_id": guest}, {"_id": 0})
+    if gcart and gcart["items"]:
+        ucart = (await get_cart({"user_id": uid}))["items"]
+        have = {i["product_id"] for i in ucart}
+        merged = ucart + [i for i in gcart["items"] if i["product_id"] not in have]
+        await db.carts.update_one({"user_id": uid}, {"$set": {"items": merged}}, upsert=True)
+    gprof, uprof = await get_profile_doc(guest), await get_profile_doc(uid)
+    fill = {k: v for k, v in gprof.items() if k not in ("user_id", "merged_guests") and v not in (None, "") and not uprof.get(k)}
+    if gprof.get("selfie_path"):
+        fill.update(selfie_path=gprof["selfie_path"], selfie_type=gprof.get("selfie_type"))
+    await db.profiles.update_one({"user_id": uid}, {"$set": fill, "$addToSet": {"merged_guests": guest}}, upsert=True)
+    await db.carts.delete_one({"user_id": guest})
+    await db.profiles.delete_one({"user_id": guest})
+    return {"merged": True}
+
+
 @api.post("/checkout")
-async def checkout(body: CheckoutIn, user: dict = Uid):
+async def checkout(body: CheckoutIn, user: dict = Signed):
     s = body.shipping
     if s.province.upper() != "QC" or not ai.QC_POSTAL.match(s.postal_code.strip()):
         raise HTTPException(400, "quebec_only")
@@ -417,8 +456,8 @@ async def mark_paid(session_id, s):
 
 
 @api.get("/payments/status/{session_id}")
-async def payment_status(session_id: str):
-    rec = await db.payment_transactions.find_one({"session_id": session_id})
+async def payment_status(session_id: str, user: dict = Signed):
+    rec = await db.payment_transactions.find_one({"session_id": session_id, "user_id": user["user_id"]})
     if not rec:
         raise HTTPException(404, "Transaction not found")
     if rec.get("payment_status") != "paid":
@@ -453,13 +492,13 @@ async def stripe_webhook(request: Request):
 
 
 @api.get("/orders")
-async def orders(user: dict = Uid):
+async def orders(user: dict = Signed):
     return await db.payment_transactions.find({"user_id": user["user_id"], "payment_status": "paid"}, {"_id": 0}) \
         .sort("created_at", DESCENDING).to_list(100)
 
 
 @api.get("/orders/{session_id}")
-async def order(session_id: str, user: dict = Uid):
+async def order(session_id: str, user: dict = Signed):
     rec = await db.payment_transactions.find_one({"session_id": session_id, "user_id": user["user_id"]}, {"_id": 0})
     if not rec:
         raise HTTPException(404, "Not found")

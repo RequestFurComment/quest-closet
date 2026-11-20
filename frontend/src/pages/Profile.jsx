@@ -4,7 +4,6 @@ import { Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AuthImage } from "@/components/AuthImage";
@@ -19,7 +18,7 @@ export default function Profile() {
   const { api, profile, setProfile, toast } = useApp();
   const navigate = useNavigate();
   const fileRef = useRef();
-  const [f, setF] = useState({ quebec_resident: false, city: "", gender: "", height_cm: "", weight_kg: "", budget: 400 });
+  const [f, setF] = useState({ city: "Montréal", gender: "", height_cm: "", weight_kg: "", budget: 400 });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -45,12 +44,12 @@ export default function Profile() {
   const save = async () => {
     setSaving(true);
     try {
-      const body = { lang, quebec_resident: !!f.quebec_resident, city: f.city, gender: f.gender, budget: Number(f.budget),
+      const body = { lang, city: f.city, gender: f.gender, budget: Number(f.budget),
         height_cm: f.height_cm ? Number(f.height_cm) : null, weight_kg: f.weight_kg ? Number(f.weight_kg) : null };
       const r = await api("put", "/profile", body);
       setProfile(r);
       toast.success(t("saved"));
-      if (r.quebec_resident) navigate("/");
+      navigate("/");
     } catch (e) {
       toast.error(t("error"));
     } finally { setSaving(false); }
@@ -62,11 +61,6 @@ export default function Profile() {
       <p className="mt-2 text-sm text-stone-400">{t("ob_sub")}</p>
 
       <div className="mt-8 space-y-6 rounded-2xl border border-stone-800 leather p-5 sm:p-8">
-        <label className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-stone-950/60 p-4" htmlFor="qc">
-          <Checkbox id="qc" checked={!!f.quebec_resident} onCheckedChange={(v) => set("quebec_resident")(!!v)} data-testid="onboarding-quebec-checkbox" />
-          <span className="text-sm text-stone-200">{t("ob_quebec")}</span>
-        </label>
-
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <Label>{t("ob_city")}</Label>

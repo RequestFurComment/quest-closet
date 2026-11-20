@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { SignIn, useAuth } from "@clerk/react";
 import { CheckCircle2, CreditCard, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ export function Checkout() {
   const { api, cart, byId, toast } = useApp();
   const [f, setF] = useState({ name: "", line1: "", city: "", province: "QC", postal_code: "" });
   const [busy, setBusy] = useState(false);
+  const { isSignedIn } = useAuth();
   const total = cart.reduce((s, i) => s + (byId[i.product_id]?.price || 0) * i.qty, 0);
   const validPostal = QC.test(f.postal_code.trim());
   const ok = f.name.length > 1 && f.line1.length > 2 && f.city.length > 1 && validPostal;
@@ -63,9 +65,17 @@ export function Checkout() {
         <div className="mt-4 flex justify-between border-t border-stone-800 pt-3"><span className="text-stone-400">{t("subtotal")}</span>
           <span className="font-semibold text-amber-300" data-testid="checkout-subtotal">{money(total, lang)}</span></div>
         <p className="mt-1 text-xs text-stone-500">{t("taxes_note")}</p>
-        <Button className="mt-5 w-full rounded-full" disabled={!ok || !cart.length || busy} onClick={pay} data-testid="stripe-checkout-btn">
-          {busy ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}{t("co_pay")}
-        </Button>
+        {isSignedIn ? (
+          <Button className="mt-5 w-full rounded-full" disabled={!ok || !cart.length || busy} onClick={pay} data-testid="stripe-checkout-btn">
+            {busy ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}{t("co_pay")}
+          </Button>
+        ) : (
+          <div className="mt-5" data-testid="checkout-signin-required">
+            <p className="mb-3 text-xs text-amber-200">{t("co_signin")}</p>
+            <SignIn routing="hash" forceRedirectUrl="/checkout" signUpForceRedirectUrl="/checkout"
+              appearance={{ elements: { rootBox: "w-full", cardBox: "w-full max-w-full shadow-none", card: "px-4" } }} />
+          </div>
+        )}
       </aside>
     </div>
   );
